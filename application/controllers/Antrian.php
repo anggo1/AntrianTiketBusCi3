@@ -28,7 +28,7 @@ class Antrian extends CI_Controller {
         // 2. Mengambil kelompok JURUSAN/TUJUAN dari tabel loket yang aktif
         $this->db->select('jurusan');
         $this->db->from('loket');
-        $this->db->where('status', 1);
+        //$this->db->where('status', 1);
         $this->db->group_by('jurusan');
         $data['daftar_jurusan'] = $this->db->get()->result_array();
 
@@ -81,43 +81,44 @@ public function daftar() {
     }
 }
 
-private function _generate_ticket() {
-    $hari_ini = date('Ymd');
-    $pilihan_jurusan = $this->input->post('jurusan_tujuan', true);
+    private function _generate_ticket() {
+        $hari_ini = date('Ymd');
+        $pilihan_jurusan = $this->input->post('jurusan_tujuan', true);
 
-    $this->db->select_max('no_antrian');
-    $this->db->where('tgl', $hari_ini);
-    $this->db->where('tujuan', $pilihan_jurusan);
-    $query = $this->db->get('transaksi')->row_array();
-    
-    $next_number = ($query['no_antrian'] != NULL) ? $query['no_antrian'] + 1 : 1;
+        // KUNCI UTAMA 1: Hitung nomor tertinggi khusus untuk JURUSAN YANG DIPILIH HARI INI
+        $this->db->select_max('no_antrian');
+        $this->db->where('tgl', $hari_ini);
+        $this->db->where('tujuan', $pilihan_jurusan); // Mengunci filter per rute tujuan
+        $query = $this->db->get('transaksi')->row_array();
+        
+        // Nomor antrean otomatis mereset dari 1 khusus rute ini jika hari berganti
+        $next_number = ($query['no_antrian'] != NULL) ? $query['no_antrian'] + 1 : 1;
 
-    $insert_data = [
-        'no_antrian' => $next_number,
-        'id_loket'   => 0,
-        'username'   => NULL,
-        'tgl'        => $hari_ini,
-        'nama'       => $this->input->post('nama', true),
-        'no_ktp'     => $this->input->post('no_ktp', true),
-        'no_tlp'     => $this->input->post('no_tlp', true),
-        'kelas'      => $this->input->post('kelas', true),
-        'tujuan'     => $pilihan_jurusan
-    ];
+        $insert_data = [
+            'no_antrian' => $next_number,
+            'id_loket'   => 0, // 0 = Status masih menunggu antrean
+            'username'   => NULL,
+            'tgl'        => $hari_ini,
+            'nama'       => $this->input->post('nama', true),
+            'no_ktp'     => $this->input->post('no_ktp', true),
+            'no_tlp'     => $this->input->post('no_tlp', true),
+            'kelas'      => $this->input->post('kelas', true),
+            'tujuan'     => $pilihan_jurusan 
+        ];
 
-    $this->db->insert('transaksi', $insert_data);
+        $this->db->insert('transaksi', $insert_data);
 
-    $ticket_session = [
-        'no_antrian' => $next_number,
-        'nama'       => $insert_data['nama'],
-        'tujuan'     => $insert_data['tujuan'],
-        'kelas'      => $insert_data['kelas'],
-        'waktu'      => date('d-m-Y H:i:s')
-    ];
-    
-    $this->session->set_flashdata('ticket_success', $ticket_session);
-    redirect(base_url('antrian'));
-}
-
+        $ticket_session = [
+            'no_antrian' => $next_number,
+            'nama'       => $insert_data['nama'],
+            'tujuan'     => $insert_data['tujuan'],
+            'kelas'      => $insert_data['kelas'],
+            'waktu'      => date('d-m-Y H:i:s')
+        ];
+        
+        $this->session->set_flashdata('ticket_success', $ticket_session);
+        redirect(base_url('antrian'));
+    }
 
         // --- HALAMAN DISPLAY UTAMA MONITOR TV BESAR ---
         public function display_screen() {
@@ -161,6 +162,72 @@ private function _generate_ticket() {
 
         echo json_encode($loket_aktif);
     }
+        public function get_live_display_coba() {
+        // ====================================================================
+        // MODE COBA/SIMULASI: Menyuntikkan 6 Loket Aktif Sekaligus Secara Instan
+        // ====================================================================
+        $simulasi_loket = [
+            [
+                'id_loket' => 1, 'loket' => '1', 'no_sekarang' => '024',
+                'rute_tujuan' => 'SURABAYA, SEMARANG, SOLO, YOGYAKARTA, KLATEN, BOYOLALI'
+            ],
+            [
+                'id_loket' => 2, 'loket' => '2', 'no_sekarang' => '115',
+                'rute_tujuan' => 'MADURA, BANGKALAN, SAMPANG, PAMEKASAN, SUMENEP'
+            ],
+            [
+                'id_loket' => 3, 'loket' => '3', 'no_sekarang' => '008',
+                'rute_tujuan' => 'MALANG, BLITAR, KEDIRI, TULUNGAGUNG, TRENGGALEK'
+            ],
+            [
+                'id_loket' => 4, 'loket' => '4', 'no_sekarang' => '201',
+                'rute_tujuan' => 'PURWOKERTO, BANYUMAS, PURBALINGGA, BANJARNEGARA, WONOSOBO'
+            ],
+            [
+                'id_loket' => 5, 'loket' => '5', 'no_sekarang' => '042',
+                'rute_tujuan' => 'PEKALONGAN, BATANG, PEMALANG, TEGAL, BREBES, SLAVI'
+            ],
+            [
+                'id_loket' => 6, 'loket' => '6', 'no_sekarang' => '077',
+                'rute_tujuan' => 'CILACAP, KEBUMEN, PURWOREJO, KARANGANYAR, SRAGEN'
+            ],
+            [
+                'id_loket' => 7, 'loket' => '7', 'no_sekarang' => '077',
+                'rute_tujuan' => 'CILACAP, KEBUMEN, PURWOREJO, KARANGANYAR, SRAGEN'
+            ]
+        ];
+
+        // Tembakkan langsung dalam format JSON ke browser
+        echo json_encode($simulasi_loket);
+    }
+
+        public function get_live_display1() {
+        $hari_ini = date('Ymd');
+
+        // Tarik semua master data loket yang terdaftar
+        $this->db->order_by('CAST(loket AS UNSIGNED)', 'ASC');
+        $all_loket = $this->db->get('loket')->result_array();
+
+        foreach ($all_loket as $key => $lk) {
+            // Ambil nomor antrean terakhir yang berhasil dipanggil oleh loket ini hari ini
+            $this->db->select('no_antrian');
+            $this->db->from('transaksi');
+            $this->db->where('tgl', $hari_ini);
+            $this->db->where('id_loket', $lk['id_loket']);
+            $this->db->order_by('tgl_waktu', 'DESC');
+            $this->db->limit(1);
+            $last_call = $this->db->get()->row_array();
+
+            // Jika belum ada aktivitas panggilan hari ini, berikan tanda strip (-)
+            $all_loket[$key]['no_sekarang'] = (!empty($last_call)) ? $last_call['no_antrian'] : '-';
+            
+            // Ambil data kelompok jurusan aslinya langsung dari database loket
+            $all_loket[$key]['rute_tujuan'] = !empty($lk['jurusan']) ? $lk['jurusan'] : 'Semua Rute';
+        }
+
+        echo json_encode($all_loket);
+    }
+
 
 
 }

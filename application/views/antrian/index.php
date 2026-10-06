@@ -250,7 +250,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="font-weight-bold text-dark">No Telefon / WhatsApp Aktif</label>
-                                <input type="text"
+                                <input type="number"
                                     class="form-control form-control-lg rounded-pill px-3 shadow-sm text-center"
                                     name="no_tlp" value="<?php echo set_value('no_tlp'); ?>" required
                                     placeholder="Contoh: 08123456xxxx">

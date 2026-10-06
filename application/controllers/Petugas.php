@@ -11,7 +11,6 @@ class Petugas extends CI_Controller {
         check_menu_access();
     }
 
-    // --- KONSOL MEJA PANGGIL DENGAN PENYELARASAN DATA PENCARIAN ---
         public function meja_panggil() {
         $data['title'] = 'Meja Konsol Kasir';
         $hari_ini = date('Ymd');
@@ -22,50 +21,73 @@ class Petugas extends CI_Controller {
             exit();
         }
 
+        // Ambil info detail rute jurusan yang dipegang oleh nomor loket ini
         $loket_info = $this->db->get_where('loket', ['id_loket' => $id_loket_dinas])->row_array();
         $data['id_loket_aktif'] = $id_loket_dinas;
         $data['loket_name'] = "Loket " . (!empty($loket_info) ? $loket_info['loket'] : '1');
         $data['jurusan_loket'] = !empty($loket_info) ? $loket_info['jurusan'] : '';
 
-        // Tangkap nomor pencarian spesifik jika ada
-        $search_number = $this->session->flashdata('search_number');
-
-        if (!empty($search_number)) {
-            $this->db->where('tgl', $hari_ini);
-            $this->db->where('no_antrian', $search_number);
-            $this->db->where("REPLACE(tujuan, ' ', '') = REPLACE('".$data['jurusan_loket']."', ' ', '')");
-            $data['current_data'] = $this->db->get('transaksi')->row_array();
-            
-            $this->session->set_flashdata('success', 'Memanggil nomor: ' . $search_number);
-        } else {
+        // --- AKSI PANGGIL TOMBOL "ANTRIAN SELANJUTNYA" JIKA DIPICU ---
+        if ($this->input->get('action') == 'next') {
+            // Ambil 1 nomor antrean terlama yang statusnya masih menunggu (id_loket = 0) KHUSUS JURUSAN LOKET INI
             $this->db->select('*');
             $this->db->from('transaksi');
             $this->db->where('tgl', $hari_ini);
-            $this->db->where('id_loket', $id_loket_dinas);
-            $this->db->order_by('tgl_waktu', 'DESC');
-            $data['current_data'] = $this->db->get()->row_array();
+            $this->db->where('id_loket', 0); 
+            $this->db->where("REPLACE(tujuan, ' ', '') = REPLACE('".$data['jurusan_loket']."', ' ', '')");
+            $this->db->order_by('id_transaksi', 'ASC'); // FIFO (First In First Out)
+            $this->db->limit(1);
+            $next_queue = $this->db->get()->row_array();
+
+            if (!empty($next_queue)) {
+                // Update status transaksi: tandai bahwa nomor ini diambil oleh loket dinas ini
+                $this->db->where('id_transaksi', $next_queue['id_transaksi']);
+                $this->db->update('transaksi', [
+                    'id_loket' => $id_loket_dinas,
+                    'username' => $this->session->userdata('username')
+                ]);
+                $this->session->set_flashdata('success', 'Berhasil memanggil nomor antrean ' . $next_queue['no_antrian']);
+            } else {
+                $this->session->set_flashdata('error', 'Antrean khusus rute ' . $data['jurusan_loket'] . ' sudah habis!');
+            }
+            redirect(base_url('petugas/meja_panggil'));
+            exit();
         }
 
-        $data['total_waiting'] = $this->db->get_where('transaksi', [
-            'tgl' => $hari_ini,
-            'tujuan' => $data['jurusan_loket'],
-            'id_loket' => 0
-        ])->num_rows();
+        // Ambil data antrean yang sedang aktif dilayani loket ini sekarang (terakhir dipanggil)
+        $this->db->select('*');
+        $this->db->from('transaksi');
+        $this->db->where('tgl', $hari_ini);
+        $this->db->where('id_loket', $id_loket_dinas);
+        $this->db->order_by('tgl_waktu', 'DESC');
+        $data['current_data'] = $this->db->get()->row_array();
 
         // ====================================================================
-        // KUNCI UTAMA NYA DI SINI:
-        // Panggil views tampulan, lalu paksa hapus flashdata saat itu juga
-        // agar tidak tersangkut berulang-ulang ketika halaman di-refresh kasir.
+        // KUNCI UTAMA 2: HITUNG TOTAL & SISA ANTREAN SPESIFIK JURUSAN LOKET INI
         // ====================================================================
+        
+        // 1. TOTAL ANTRIAN: Menghitung semua orang yang mendaftar di jurusan ini hari ini
+        $this->db->from('transaksi');
+        $this->db->where('tgl', $hari_ini);
+        $this->db->where("REPLACE(tujuan, ' ', '') = REPLACE('".$data['jurusan_loket']."', ' ', '')");
+        $data['total_antrian_jurusan'] = $this->db->get()->num_rows();
+
+        // 2. SISA ANTRIAN: Menghitung orang di jurusan ini yang id_loket-nya MASIH 0 (Belum Terpanggil)
+        $this->db->from('transaksi');
+        $this->db->where('tgl', $hari_ini);
+        $this->db->where('id_loket', 0);
+        $this->db->where("REPLACE(tujuan, ' ', '') = REPLACE('".$data['jurusan_loket']."', ' ', '')");
+        $data['sisa_antrian_jurusan'] = $this->db->get()->num_rows();
+
+        // Render views ke browser
         $this->load->view('templates/header', $data);
         $this->load->view('templates/sidebar');
-        $this->load->view('templates/navbar');
         $this->load->view('petugas/meja_panggil_view', $data);
         $this->load->view('templates/footer');
 
-        // Perintah menghapus jejak flashdata sukses secara paksa di background
         $this->session->unset_userdata('success');
     }
+
 
 
     // --- PROSES PENCARIAN & UPDATE DATA ANTREAN ---
