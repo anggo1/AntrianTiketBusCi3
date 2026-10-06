@@ -22,53 +22,59 @@ function playTvAudio(nomor, loketId) {
     };
 }
 
-function updateLiveDisplay() {
-    $.ajax({
-        url: "<?php echo base_url('antrian/get_live_display'); ?>",
-        type: 'get',
-        dataType: 'json',
-        success: function(data) {
-            if (!data || data.length === 0) {
-                $('#display_loket_container').html(
-                    '<div class="col-12 text-center text-muted py-5">' +
-                    '<i class="fas fa-info-circle fa-2x mb-2 d-block text-warning"></i>' +
-                    'Belum ada meja loket petugas yang aktif dinas saat ini.' +
-                    '</div>'
-                );
-                return;
-            }
-
-            let html = '<div class="row w-100 m-0">';
-            data.forEach(function(lk) {
-                let key = 'loket_' + lk.id_loket;
-                let isNew = false;
-                let nomorSekarang = lk.no_sekarang ? lk.no_sekarang : '0';
-
-                if (localCacheNumbers[key] !== undefined && localCacheNumbers[key] != nomorSekarang && nomorSekarang != '0') {
-                    isNew = true;
-                    playTvAudio(nomorSekarang, lk.loket);
+    function updateLiveDisplay() {
+        $.ajax({
+            url: "<?php echo base_url('antrian/get_live_display'); ?>",
+            type: 'get',
+            dataType: 'json',
+            success: function(data) {
+                if (!data || data.length === 0) {
+                    $('#display_loket_container').html(
+                        '<div class="col-12 text-center text-muted py-5">' +
+                        '<i class="fas fa-info-circle fa-2x mb-2 d-block text-warning"></i>' +
+                        'Belum ada meja loket petugas yang aktif dinas saat ini.' +
+                        '</div>'
+                    );
+                    return;
                 }
-                localCacheNumbers[key] = nomorSekarang;
 
-                let flashClass = isNew ? 'flash-active' : '';
+                let html = '<div class="row w-100 m-0">';
+                data.forEach(function(lk) {
+                    let key = 'loket_' + lk.id_loket;
+                    let isNew = false;
+                    let nomorSekarang = lk.no_sekarang ? lk.no_sekarang : '0';
 
-                html += '<div class="col-xl-6 col-md-6 mb-4 px-2">' +
-                            '<div class="loket-card text-center">' +
-                                '<div class="loket-title text-uppercase">LOKET ' + lk.loket + '</div>' +
-                                '<div class="py-2 ' + flashClass + '">' +
-                                    '<div class="number-box shadow-inner">' + nomorSekarang + '</div>' +
+                    if (localCacheNumbers[key] !== undefined && localCacheNumbers[key] != nomorSekarang && nomorSekarang != '0') {
+                        isNew = true;
+                        playTvAudio(nomorSekarang, lk.loket);
+                    }
+                    localCacheNumbers[key] = nomorSekarang;
+
+                    let flashClass = isNew ? 'flash-active' : '';
+
+                    // PERBAIKAN: Menambahkan elemen div rute-tujuan di bawah kotak nomor antrean
+                    html += '<div class="col-xl-6 col-md-6 mb-4 px-2">' +
+                                '<div class="loket-card text-center">' +
+                                    '<div class="loket-title text-uppercase">LOKET ' + lk.loket + '</div>' +
+                                    '<div class="py-2 ' + flashClass + '">' +
+                                        '<div class="number-box shadow-inner mb-2">' + nomorSekarang + '</div>' +
+                                        '<!-- TAMPILAN JURUSAN DINAMIS -->' +
+                                        '<div class="px-3 py-1 font-weight-bold text-truncate text-warning small text-uppercase" style="letter-spacing:0.5px; max-width: 100%; font-size:0.85rem;" title="' + lk.rute_tujuan + '">' +
+                                            '<i class="fas fa-road mr-1 text-white-50"></i> ' + lk.rute_tujuan +
+                                        '</div>' +
+                                    '</div>' +
                                 '</div>' +
-                            '</div>' +
-                        '</div>';
-            });
-            html += '</div>';
-            $('#display_loket_container').html(html);
-        },
-        error: function(xhr, status, error) {
-            console.log("Error AJAX Display Loket: " + error);
-        }
-    });
-}
+                            '</div>';
+                });
+                html += '</div>';
+                $('#display_loket_container').html(html);
+            },
+            error: function(xhr, status, error) {
+                console.log("Error AJAX Display Loket: " + error);
+            }
+        });
+    }
+
 
 // Menjalankan Semua Fungsi Otomatis Saat Dokumen Siap
 $(document).ready(function() {

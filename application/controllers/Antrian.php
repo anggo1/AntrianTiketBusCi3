@@ -135,15 +135,16 @@ private function _generate_ticket() {
 
 
     // --- ENDPOINT DATA AJAX REAL-TIME UNTUK TV (DIPANGGIL JQUERY 3 DETIK SEKALI) ---
-    public function get_live_display() {
+        public function get_live_display() {
         $hari_ini = date('Ymd');
 
-        // Tarik semua loket yang aktif memanggil
-        $this->db->where('status', 0); // status 0 berarti sedang aktif melayani/dipakai petugas
+        // Tarik semua loket yang sedang aktif melayani (status 0 = dipakai petugas)
+        $this->db->where('status', 0); 
         $this->db->order_by('CAST(loket AS UNSIGNED)', 'ASC');
         $loket_aktif = $this->db->get('loket')->result_array();
 
         foreach ($loket_aktif as $key => $lk) {
+            // 1. Ambil nomor antrean terakhir yang dipanggil oleh loket ini
             $this->db->select('no_antrian');
             $this->db->from('transaksi');
             $this->db->where('tgl', $hari_ini);
@@ -153,9 +154,13 @@ private function _generate_ticket() {
             $last_call = $this->db->get()->row_array();
 
             $loket_aktif[$key]['no_sekarang'] = (!empty($last_call)) ? $last_call['no_antrian'] : '0';
+            
+            // 2. Amankan data jurusan agar jika teksnya terlalu panjang tidak merusak tata letak layout
+            $loket_aktif[$key]['rute_tujuan'] = !empty($lk['jurusan']) ? $lk['jurusan'] : 'Semua Rute';
         }
 
         echo json_encode($loket_aktif);
     }
+
 
 }
