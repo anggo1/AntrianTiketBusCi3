@@ -1,7 +1,9 @@
 <div class="container-fluid mt-4">
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800 font-weight-bold"><i class="fas fa-cash-register text-success mr-2"></i><?php echo $title; ?></h1>
-        <span class="badge badge-primary p-2 font-weight-bold" style="font-size:0.9rem;"><i class="fas fa-user-tie mr-1"></i> Operator: <?php echo $this->session->userdata('name'); ?></span>
+        <h1 class="h3 mb-0 text-gray-800 font-weight-bold"><i
+                class="fas fa-cash-register text-success mr-2"></i><?php echo $title; ?></h1>
+        <span class="badge badge-primary p-2 font-weight-bold" style="font-size:0.9rem;"><i
+                class="fas fa-user-tie mr-1"></i> Operator: <?php echo $this->session->userdata('name'); ?></span>
     </div>
 
     <!-- Informasi Rute Terkunci -->
@@ -9,45 +11,53 @@
         <div class="bg-info p-3 text-white rounded mr-3 shadow-2xs"><i class="fas fa-route fa-lg"></i></div>
         <div>
             <div class="small font-weight-bold text-info text-uppercase">Meja Tugas: <?php echo $loket_name; ?></div>
-            <div class="font-weight-bold text-gray-800" style="font-size:0.95rem;">Melayani Rute: <?php echo $jurusan_loket; ?></div>
+            <div class="font-weight-bold text-gray-800" style="font-size:0.95rem;">Melayani Rute:
+                <?php echo $jurusan_loket; ?></div>
         </div>
     </div>
 
     <!-- Pod Utama Pemanggilan -->
     <div class="card shadow border-0 mb-4 col-lg-10 p-0 mx-auto">
         <div class="card-header bg-gradient-success text-white py-3 text-center rounded-top">
-            <h5 class="m-0 font-weight-bold" style="letter-spacing:1px;"><?php echo strtoupper($loket_name); ?> - KONSOL UTAMA</h5>
+            <h5 class="m-0 font-weight-bold" style="letter-spacing:1px;"><?php echo strtoupper($loket_name); ?> - KONSOL
+                UTAMA</h5>
         </div>
         <div class="card-body bg-white p-4 rounded-bottom">
-            
+
             <!-- BLOK 1: STATISTIK TRANS-JURUSAN DAN LOKET -->
             <div class="row mb-4">
                 <!-- CARD 1: TOTAL ANTRIAN JURUSAN INI -->
                 <div class="col-md-6 mb-2">
-                    <div class="card shadow border-0" style="border-radius: 12px; border-left: 5px solid #4e73df !important;">
+                    <div class="card shadow border-0"
+                        style="border-radius: 12px; border-left: 5px solid #4e73df !important;">
                         <div class="card-body py-3">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                 <i class="fas fa-list-ol mr-1"></i> Total Antrean Jurusan
                             </div>
                             <div class="h3 mb-0 font-weight-bold text-gray-800">
-                                <?php echo isset($total_antrian_jurusan) ? $total_antrian_jurusan : '0'; ?> <span style="font-size:0.85rem; font-weight:600;" class="text-muted">Orang</span>
+                                <?php echo isset($total_antrian_jurusan) ? $total_antrian_jurusan : '0'; ?> <span
+                                    style="font-size:0.85rem; font-weight:600;" class="text-muted">Orang</span>
                             </div>
-                            <small class="text-muted font-weight-bold text-xs d-block mt-1">Rute: <?php echo $jurusan_loket; ?></small>
+                            <small class="text-muted font-weight-bold text-xs d-block mt-1">Rute:
+                                <?php echo $jurusan_loket; ?></small>
                         </div>
                     </div>
                 </div>
 
                 <!-- CARD 2: SISA ANTRIAN BELUM TERPANGGIL JURUSAN INI -->
                 <div class="col-md-6 mb-2">
-                    <div class="card shadow border-0" style="border-radius: 12px; border-left: 5px solid #e74a3b !important;">
+                    <div class="card shadow border-0"
+                        style="border-radius: 12px; border-left: 5px solid #e74a3b !important;">
                         <div class="card-body py-3">
                             <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
                                 <i class="fas fa-user-clock mr-1"></i> Sisa Antrean Menunggu
                             </div>
                             <div class="h3 mb-0 font-weight-bold text-gray-800">
-                                <?php echo isset($sisa_antrian_jurusan) ? $sisa_antrian_jurusan : '0'; ?> <span style="font-size:0.85rem; font-weight:600;" class="text-muted">Orang</span>
+                                <?php echo isset($sisa_antrian_jurusan) ? $sisa_antrian_jurusan : '0'; ?> <span
+                                    style="font-size:0.85rem; font-weight:600;" class="text-muted">Orang</span>
                             </div>
-                            <small class="text-muted font-weight-bold text-xs d-block mt-1">Belum dipanggil menuju <?php echo $loket_name; ?></small>
+                            <small class="text-muted font-weight-bold text-xs d-block mt-1">Belum dipanggil menuju
+                                <?php echo $loket_name; ?></small>
                         </div>
                     </div>
                 </div>
@@ -55,29 +65,33 @@
 
             <!-- BLOK 2: AREA UTAMA DISPLAY ANGKA DAN TOMBOL KEMUDI KASIR -->
             <div class="row align-items-center justify-content-center border-top pt-4">
-                
+
                 <!-- KOLOM KIRI: POD SIRKULAR ANGKA BESAR NOMOR SAAT INI -->
-                <div class="col-md-5 text-center border-right pr-md-4 mb-4 mb-md-0">
-                    <div class="small font-weight-bold text-gray-600 text-uppercase mb-2">Nomor Antrean Sekarang</div>
-                    <div class="d-flex align-items-center justify-content-center mx-auto shadow-inner bg-light border-success" 
-                         style="width: 170px; height: 170px; border-radius: 50%; border: 6px solid #1cc88a;">
-                        <h1 class="display-3 font-weight-bold text-gray-900 mb-0" id="current_call_number" style="font-size: 4.8rem;">
-                            <?php echo !empty($current_data) ? $current_data['no_antrian'] : '-'; ?>
-                        </h1>
-                    </div>
+                <!-- CARI DAN GANTI BAGIAN BULATAN ANGKA BESAR DI VIEW ANDA MENJADI SEPERTI INI -->
+                <div class="d-flex align-items-center justify-content-center mx-auto shadow-inner bg-light border-success"
+                    style="width: 170px; height: 170px; border-radius: 50%; border: 6px solid #1cc88a;">
+                    <h1 class="font-weight-bold text-gray-900 mb-0" id="current_call_number" style="font-size: 3.2rem;">
+                        <!-- MENGGANTI MENJADI no_antrian_lengkap AGAR MUNCUL HURUF (CONTOH: A-001) -->
+                        <?php echo !empty($current_data) ? $current_data['no_antrian_lengkap'] : '-'; ?>
+                    </h1>
                 </div>
+
 
                 <!-- KOLOM KANAN: TOMBOL AKSI KEMUDI KASIR -->
                 <div class="col-md-7 pl-md-4 text-center">
                     <!-- Form Input Pencarian Spesifik -->
                     <form class="mb-4" method="post" action="<?php echo base_url('petugas/panggil_spesifik'); ?>">
                         <div class="form-group row justify-content-center mb-0">
-                            <label class="col-sm-4 col-form-label font-weight-bold text-gray-800 text-md-right pt-2">Cari Antrean</label>
+                            <label
+                                class="col-sm-4 col-form-label font-weight-bold text-gray-800 text-md-right pt-2">Cari
+                                Antrean</label>
                             <div class="col-sm-8 d-flex">
-                                <input type="number" class="form-control mr-2 form-control-lg font-weight-bold text-center text-primary" 
-                                       placeholder="No..." name="no_antrian" min="1" required 
-                                       style="max-width: 110px; border: 2px solid #4e73df; border-radius: 8px;">
-                                <button type="submit" class="btn btn-primary px-4 font-weight-bold shadow-sm rounded-lg">
+                                <input type="number"
+                                    class="form-control mr-2 form-control-lg font-weight-bold text-center text-primary"
+                                    placeholder="No..." name="no_antrian" min="1" required
+                                    style="max-width: 110px; border: 2px solid #4e73df; border-radius: 8px;">
+                                <button type="submit"
+                                    class="btn btn-primary px-4 font-weight-bold shadow-sm rounded-lg">
                                     <i class="fas fa-search mr-1"></i>Cari
                                 </button>
                             </div>
@@ -87,15 +101,21 @@
                     <div class="row">
                         <div class="col-6">
                             <!-- Tombol Panggil Ulang Suara Nomor Sekarang -->
-                            <button class="btn btn-info btn-block py-4 shadow font-weight-bold border-0 btn-tactile" onclick="recall()" <?php echo empty($current_data) ? 'disabled' : ''; ?> style="background: linear-gradient(to bottom, #36b9cc, #258cd1); border-radius:10px;">
+                            <button class="btn btn-info btn-block py-4 shadow font-weight-bold border-0 btn-tactile"
+                                onclick="recall()" <?php echo empty($current_data) ? 'disabled' : ''; ?>
+                                style="background: linear-gradient(to bottom, #36b9cc, #258cd1); border-radius:10px;">
                                 <i class="fas fa-bullhorn fa-2x d-block mb-2"></i> Panggil
                             </button>
                         </div>
                         <div class="col-6">
                             <!-- Tombol Geser Antrean Selanjutnya -->
-                            <a href="<?php echo base_url('petugas/panggil_berikutnya/' . $id_loket_aktif); ?>" class="btn btn-danger btn-block py-4 shadow font-weight-bold border-0 btn-tactile" style="background: linear-gradient(to bottom, #e74a3b, #be2617); border-radius:10px;">
+                            <!-- CARI BARIS TOMBOL ANTRIAN SELANJUTNYA DI VIEW ANDA, PASTIKAN LINK-NYA SEPERTI INI -->
+                            <a href="<?php echo base_url('petugas/panggil_berikutnya'); ?>"
+                                class="btn btn-danger btn-block py-4 shadow font-weight-bold border-0 btn-tactile"
+                                style="background: linear-gradient(to bottom, #e74a3b, #be2617); border-radius:10px;">
                                 <i class="fas fa-forward fa-2x d-block mb-2"></i> Antrian Selanjutnya
                             </a>
+
                         </div>
                     </div>
                 </div>
@@ -108,7 +128,8 @@
     <!-- Informasi Detail Identitas Penumpang Bawah -->
     <div class="card shadow border-0 col-lg-10 mx-auto p-0 mb-5" style="border-radius: 12px; overflow: hidden;">
         <div class="card-header bg-light py-3 border-bottom">
-            <h6 class="m-0 font-weight-bold text-gray-800"><i class="fas fa-id-card mr-2 text-success"></i>Data Penumpang Terpanggil Saat Ini</h6>
+            <h6 class="m-0 font-weight-bold text-gray-800"><i class="fas fa-id-card mr-2 text-success"></i>Data
+                Penumpang Terpanggil Saat Ini</h6>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -127,11 +148,14 @@
                             <td class="font-weight-bold text-gray-900"><?php echo $current_data['nama']; ?></td>
                             <td><code><?php echo $current_data['no_ktp']; ?></code></td>
                             <td><?php echo $current_data['no_tlp']; ?></td>
-                            <td><span class="badge badge-success px-3 py-1 font-weight-bold"><?php echo $current_data['kelas']; ?></span></td>
+                            <td><span
+                                    class="badge badge-success px-3 py-1 font-weight-bold"><?php echo $current_data['kelas']; ?></span>
+                            </td>
                         </tr>
                         <?php else : ?>
                         <tr>
-                            <td colspan="4" class="text-center text-muted py-4 italic">Belum ada aktivitas panggilan tiket di meja loket Anda hari ini.</td>
+                            <td colspan="4" class="text-center text-muted py-4 italic">Belum ada aktivitas panggilan
+                                tiket di meja loket Anda hari ini.</td>
                         </tr>
                         <?php endif; ?>
                     </tbody>
@@ -142,19 +166,39 @@
 </div>
 
 <style>
-    .btn-tactile { transition: transform 0.1s ease; }
-    .btn-tactile:active { transform: translateY(3px) scale(0.97); }
-    .rounded-lg { border-radius: 8px !important; }
+.btn-tactile {
+    transition: transform 0.1s ease;
+}
+
+.btn-tactile:active {
+    transform: translateY(3px) scale(0.97);
+}
+
+.rounded-lg {
+    border-radius: 8px !important;
+}
 </style>
 
 <script>
-// Fungsi Panggil Ulang (Recall) dengan integrasi Audio Offline Lokal
 function recall() {
-    const nomor = "<?php echo !empty($current_data) ? $current_data['no_antrian'] : 0; ?>";
+    const nomor = "<?php echo !empty($current_data) ? $current_data['no_antrian_lengkap'] : 0; ?>";
     const loket = "<?php echo isset($loket_name) ? $loket_name : '1'; ?>";
     
-    if(parseInt(nomor) > 0) {
-        // Mengamankan pemanggilan fungsi audio offline yang ada di file footer.php
+    if(nomor != '0' && nomor != '') {
+        // 1. Tembak database senyap lewat background AJAX agar tgl_waktu di DB berubah saat ini juga
+        $.ajax({
+            url: "<?php echo base_url('petugas/ajax_recall'); ?>",
+            type: "POST",
+            dataType: "json",
+            success: function(response) {
+                console.log("Sinyal database berhasil dikirim ke Layar TV Luar.");
+            },
+            error: function(xhr, status, error) {
+                console.log("Gagal sinkronisasi data ke database TV.");
+            }
+        });
+
+        // 2. Putar suara offline lokal di speaker komputer kasir itu sendiri
         if (typeof playQueueSoundOffline === "function") {
             playQueueSoundOffline(nomor, loket);
         } else {
@@ -162,4 +206,6 @@ function recall() {
         }
     }
 }
+
+
 </script>

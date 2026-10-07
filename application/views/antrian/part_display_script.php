@@ -1,4 +1,3 @@
-<!-- Pustaka JavaScript Utama -->
 <script src="<?php echo base_url('assets/admin/vendor/jquery/jquery.min.js'); ?>"></script>
 <script src="<?php echo base_url('assets/admin/vendor/bootstrap/js/bootstrap.bundle.min.js'); ?>"></script>
 
@@ -30,67 +29,84 @@ function updateLiveDisplay() {
         type: 'get',
         dataType: 'json',
         success: function(data) {
-            if (!data || data.length === 0) {
-                $('#display_loket_container').html(
-                    '<div class="w-100 text-center text-muted m-auto py-5">' +
-                    '<i class="fas fa-info-circle fa-2x mb-2 d-block text-warning"></i>' +
-                    'Belum ada data meja loket yang aktif dinas saat ini.' +
-                    '</div>'
-                );
-                return;
-            }
+    if (!data || data.length === 0) {
+        // Tampilan standby jika semua kasir sedang logout / tutup toko
+        $('#display_loket_container').html(
+            '<div class="w-100 text-center text-muted m-auto py-5">' +
+            '<i class="fas fa-lock fa-3x mb-3 d-block text-danger"></i>' +
+            '<h4 class="font-weight-bold text-white">LOKET PELAYANAN BELUM DIBUKA</h4>' +
+            '<span class="text-white-50">Silakan mengambil nomor antrean melalui HP anda dengan scan </span>' +
+            '</div>'
+        );
+        return;
+    }
 
-            let totalLoket = data.length;
+    let totalLoket = data.length;
             
+                        // ====================================================================
+            // SINKRONISASI TINGGI: Menyelaraskan Grid Kanan dengan Gambar Kiri
             // ====================================================================
-            // ENGINE HITUNG DIMENSI DINAMIS SECARA MATEMATIS BERDASARKAN JUMLAH DATA
-            // ====================================================================
-            let bootstrapCol = "col-6"; // Jika loket banyak, default 2 kolom berdampingan
-            let rowHeightPercent = "48%"; // Tinggi default kotak loket (muat 4 loket)
-            let fontSizeNumber = "4.2rem"; // Ukuran default font nomor panggilan
-            let fontSizeJurusan = "0.85rem"; // Ukuran default teks jurusan
+            let bootstrapCol = "col-6"; 
+            let rowHeightPercent = "15.0vh"; // Dikunci 15vh agar total 5 baris pas setinggi 75vh sisa ruang
+            let fontSizeNumber = "2.1rem";    
+            let fontSizeJurusan = "0.65rem";  
 
             if (totalLoket <= 2) {
-                bootstrapCol = "col-12"; // Jika hanya 1-2 loket, buat melebar penuh 1 kolom
-                rowHeightPercent = (totalLoket === 1) ? "100%" : "48%";
-                fontSizeNumber = (totalLoket === 1) ? "8rem" : "5.5rem";
-                fontSizeJurusan = (totalLoket === 1) ? "1.2rem" : "0.95rem";
+                bootstrapCol = "col-12"; 
+                rowHeightPercent = (totalLoket === 1) ? "75vh" : "37vh";
+                fontSizeNumber = (totalLoket === 1) ? "7.0rem" : "4.5rem";
+                fontSizeJurusan = (totalLoket === 1) ? "1.1rem" : "0.90rem";
+            } else if (totalLoket > 2 && totalLoket <= 4) {
+                bootstrapCol = "col-6";
+                rowHeightPercent = "37vh";
+                fontSizeNumber = "3.5rem";
+                fontSizeJurusan = "0.78rem";
             } else if (totalLoket > 4 && totalLoket <= 6) {
-                rowHeightPercent = "31%"; // Jika ada 5-6 loket, tinggi mengecil jadi 3 baris
-                fontSizeNumber = "3.2rem";
-                fontSizeJurusan = "0.75rem";
-            } else if (totalLoket > 6) {
-                rowHeightPercent = "23%"; // Jika di atas 6 loket, tinggi mengecil jadi 4 baris
-                fontSizeNumber = "2.5rem";
-                fontSizeJurusan = "0.7rem";
+                rowHeightPercent = "24vh"; 
+                fontSizeNumber = "2.6rem";
+                fontSizeJurusan = "0.70rem";
+            } else if (totalLoket > 6 && totalLoket <= 8) {
+                rowHeightPercent = "18.5vh"; 
+                fontSizeNumber = "2.3rem";
+                fontSizeJurusan = "0.68rem";
             }
 
-            let html = '<div class="row w-100 m-0 h-100 align-content-between">';
+            // Gunakan margin-bottom tipis 0.5vh agar pas menutup rapat halaman bawah TV
+            let html = '<div class="row w-100 m-0 h-100 align-content-start">';
+
             
             data.forEach(function(lk) {
-                let key = 'loket_' + lk.id_loket;
+                let key_nomor = 'loket_num_' + lk.id_loket;
+                let key_waktu = 'loket_time_' + lk.id_loket;
                 let isNew = false;
+                
                 let nomorSekarang = lk.no_sekarang ? lk.no_sekarang : '-';
+                let waktuPanggil = lk.waktu_panggil ? lk.waktu_panggil : '';
 
-                if (localCacheNumbers[key] !== undefined && localCacheNumbers[key] != nomorSekarang && nomorSekarang != '-') {
+                if (localCacheNumbers[key_waktu] !== undefined && localCacheNumbers[key_waktu] != waktuPanggil && nomorSekarang != '-') {
                     isNew = true;
-                    playTvAudio(nomorSekarang, lk.loket);
+                    if (typeof playTvAudio === "function") {
+                        playTvAudio(nomorSekarang, lk.loket);
+                    }
                 }
-                localCacheNumbers[key] = nomorSekarang;
+                
+                localCacheNumbers[key_nomor] = nomorSekarang;
+                localCacheNumbers[key_waktu] = waktuPanggil;
 
                 let flashClass = isNew ? 'flash-active' : '';
 
-                // Suntikkan style height dinamis secara inline per kotak loket
-                html += '<div class="' + bootstrapCol + ' px-1 mb-2" style="height: ' + rowHeightPercent + ';">' +
-                            '<div class="loket-card text-center">' +
-                                '<div class="loket-title text-uppercase">LOKET ' + lk.loket + '</div>' +
-                                '<div class="loket-body-tv ' + flashClass + '">' +
-                                    '<div class="number-box shadow-inner" style="font-size: ' + fontSizeNumber + ';">' + nomorSekarang + '</div>' +
-                                    '<!-- Teks jurusan lebar penuh memanjang ke bawah (tanpa limit & tanpa terpotong ...) -->' +
-                                    '<div class="jurusan-text-tv text-center" style="font-size: ' + fontSizeJurusan + '; white-space: normal; word-wrap: break-word; overflow: visible; display: block; flex-grow: 1; margin-top: 4px;">' +
-                                        '<i class="fas fa-road mr-1 text-white-50"></i> ' + lk.rute_tujuan +
-                                    '</div>'
-                                    +
+                // Judul nama loket kustom dinamis dari database
+                let titleLoket = lk.loket.toLowerCase().includes('eksekutif') ? lk.loket : 'LOKET ' + lk.loket;
+
+                // PERBAIKAN MUTLAK: Mengunci margin-bottom ke 0.6vh dan membatasi tinggi maksimal komponen internal
+                html += '<div class="' + bootstrapCol + ' px-1" style="height: ' + rowHeightPercent + '; margin-bottom: 0.6vh;">' +
+                            '<div class="loket-card text-center" style="height: 100%;">' +
+                                '<div class="loket-title text-truncate" style="padding: 2px 8px; font-size: 0.95rem; line-height: 1.2; flex-shrink: 0;">' + titleLoket + '</div>' +
+                                '<div class="loket-body-tv ' + flashClass + '" style="display: flex; flex-direction: column; justify-content: center; height: calc(100% - 22px); padding: 2px 4px;">' +
+                                    '<div class="number-box shadow-inner" style="font-size: ' + fontSizeNumber + '; line-height: 1.1; margin-bottom: 2px; flex-shrink: 0;">' + nomorSekarang + '</div>' +
+                                    '<div class="jurusan-text-tv text-center" style="font-size: ' + fontSizeJurusan + '; margin-top: 1px;" title="' + lk.rute_tujuan + '">' +
+                                        '<i class="fas fa-road mr-1 text-white-50"></i>' + lk.rute_tujuan +
+                                    '</div>' +
                                 '</div>' +
                             '</div>' +
                         '</div>';
@@ -104,6 +120,7 @@ function updateLiveDisplay() {
         }
     });
 }
+
 
 $(document).ready(function() {
     updateLiveDisplay();

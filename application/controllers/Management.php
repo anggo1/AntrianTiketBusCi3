@@ -320,11 +320,11 @@ class Management extends CI_Controller {
 
 
     // PROSES SIMPAN UPLOAD GAMBAR SLIDER
-    public function upload_slider() {
+        public function upload_slider() {
         $config['upload_path']   = './assets/admin/img/upload/';
         $config['allowed_types'] = 'jpg|jpeg|png|gif';
-        $config['max_size']      = 3072; // 3MB
-        $config['encrypt_name']  = TRUE; // Enkripsi nama file agar aman
+        $config['max_size']      = 10240; // Diperbesar ke 10MB agar kasir bisa upload foto mentah jepretan HP sebelum dikompres
+        $config['encrypt_name']  = TRUE;  // Enkripsi nama file agar aman dan tidak bentrok
 
         // Buat folder otomatis jika belum tersedia di assets
         if (!is_dir($config['upload_path'])) {
@@ -337,15 +337,45 @@ class Management extends CI_Controller {
             $this->session->set_flashdata('error', $this->upload->display_errors());
         } else {
             $file_data = $this->upload->data();
+            $file_name = $file_data['file_name'];
+            $file_path = $file_data['full_path'];
+
+            // ====================================================================
+            // ENGINE SAKTI KOMPRESI OTOMATIS (SINKRONISASI LAYAR ANTRIAN TV 16:9)
+            // ====================================================================
+            $this->load->library('image_lib');
+            
+            $compress_config['image_library']  = 'gd2';
+            $compress_config['source_image']   = $file_path; // Gambar mentah target yang baru saja masuk folder
+            $compress_config['create_thumb']   = FALSE;
+            $compress_config['maintain_ratio'] = TRUE;       // Kunci rasio agar gambar tidak melar/gepeng di Smart TV
+            $compress_config['width']          = 1280;       // Atur lebar maksimal ke standar HD 1280px
+            $compress_config['height']         = 720;        // Atur tinggi maksimal ke 720px
+            $compress_config['quality']        = '75%';      // Susutkan ukuran file ke 75% (Sangat ringan, kualitas tetap tajam)
+
+            // Inisialisasi dan tembak perintah resize gambar
+            $this->image_lib->initialize($compress_config);
+            
+            if (!$this->image_lib->resize()) {
+                // Catat log jika sistem XAMPP Anda mendeteksi error pada ekstensi GD2
+                log_message('error', $this->image_lib->display_errors());
+            }
+            
+            // Bersihkan memori ram library setelah berhasil memperkecil ukuran gambar
+            $this->image_lib->clear();
+            // ====================================================================
+
+            // Simpan nama file hasil kompresi ke dalam database
             $insert_data = [
-                'gambar' => $file_data['file_name'],
+                'gambar' => $file_name,
                 'keterangan' => $this->input->post('keterangan', true)
             ];
             $this->db->insert('display_info', $insert_data);
-            $this->session->set_flashdata('success', 'Gambar Informasi Berhasil Diunggah!');
+            $this->session->set_flashdata('success', 'Gambar Informasi Berhasil Diunggah & Dikompres Otomatis!');
         }
         redirect(base_url('management/display_control'));
     }
+
 
     // PROSES SIMPAN BERITA BERJALAN
     public function add_running_text() {

@@ -115,7 +115,7 @@
             <h4 class="mb-0 font-weight-bold" id="kios_clock" style="color: #fff;">00:00:00</h4>
             <small class="text-white-50 font-weight-bold"><?= date('d F Y'); ?></small>
         </div>
-    </div>    <!-- ==================================================================== -->
+    </div> <!-- ==================================================================== -->
     <!-- KARD INFORMASI LIVE: JUMLAH ANTRIAN & NOMOR TERPANGGIL (RESPONSIF MOBILE) -->
     <!-- ==================================================================== -->
     <div class="row text-center mb-4">
@@ -123,11 +123,13 @@
         <div class="col-6 pr-2 pl-3">
             <div class="card shadow border-0" style="border-radius: 15px; border-left: 5px solid #36b9cc !important;">
                 <div class="card-body px-2 py-3">
-                    <div class="text-uppercase mb-1 font-weight-bold text-info" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                    <div class="text-uppercase mb-1 font-weight-bold text-info"
+                        style="font-size: 0.72rem; letter-spacing: 0.5px;">
                         <i class="fas fa-users mr-1"></i> Sisa Antrean
                     </div>
                     <div class="h3 mb-0 font-weight-bold text-gray-800 tracking-tight">
-                        <?php echo !empty($total_waiting) ? $total_waiting : '0'; ?> <span style="font-size:0.85rem; font-weight:600;" class="text-muted">Orang</span>
+                        <?php echo !empty($total_waiting) ? $total_waiting : '0'; ?> <span
+                            style="font-size:0.85rem; font-weight:600;" class="text-muted">Orang</span>
                     </div>
                 </div>
             </div>
@@ -137,11 +139,13 @@
         <div class="col-6 pl-2 pr-3">
             <div class="card shadow border-0" style="border-radius: 15px; border-left: 5px solid #1cc88a !important;">
                 <div class="card-body px-2 py-3">
-                    <div class="text-uppercase mb-1 font-weight-bold text-success" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                    <div class="text-uppercase mb-1 font-weight-bold text-success"
+                        style="font-size: 0.72rem; letter-spacing: 0.5px;">
                         <i class="fas fa-bullhorn mr-1"></i> Terpanggil
                     </div>
                     <div class="h3 mb-0 font-weight-bold text-gray-800 tracking-tight">
-                        <span style="font-size:0.9rem; font-weight:700;" class="text-success">No.</span> <?php echo !empty($called_number) ? $called_number : '0'; ?>
+                        <span style="font-size:0.9rem; font-weight:700;" class="text-success">No.</span>
+                        <?php echo !empty($called_number) ? $called_number : '0'; ?>
                     </div>
                 </div>
             </div>
@@ -174,6 +178,15 @@
                             </div>
                             <div class="small text-muted font-weight-bold text-uppercase mt-2">Nomor Antrean Anda</div>
                             <div class="ticket-number" id="ticket_no_val"><?= $ticket['no_antrian']; ?></div>
+
+                            <!-- BAGIAN KETERANGAN LOKET TUJUAN TIKET KONSUMEN -->
+                            <div class="alert alert-secondary py-1 px-2 font-weight-bold mb-3 border text-dark"
+                                style="font-size: 0.9rem; border-radius: 8px;">
+                               <!-- menambahkan nomor loket:   $ticket['nomor_loket']; ?>-->
+                                <i class="fas fa-arrow-right text-success mr-1"></i> SILAKAN MENUJU Ke : <span
+                                    class="text-primary font-weight-bold">LOKET SESUAI TUJUAN ANDA </span>
+                            </div>
+
                             <div class="border-top pt-3 text-left small text-gray-800">
                                 <table class="table table-borderless table-sm mb-0" style="font-size: 0.85rem;">
                                     <tr>
@@ -190,12 +203,13 @@
                                         <td>Tujuan</td>
                                         <td>:</td>
                                         <td class="font-weight-bold" style="line-height:1.2;">
-                                            <?= character_limiter($ticket['tujuan'], 35); ?></td>
+                                            <?= $ticket['tujuan']; ?></td>
                                     </tr>
+                                    <!-- WAKTU SUDAH OTOMATIS BERZONA JAKARTA INDONESIA (WIB) -->
                                     <tr>
                                         <td>Waktu</td>
                                         <td>:</td>
-                                        <td class="text-muted"><?= $ticket['waktu']; ?></td>
+                                        <td class="text-muted font-weight-bold"><?= $ticket['waktu']; ?></td>
                                     </tr>
                                 </table>
                             </div>

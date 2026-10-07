@@ -18,67 +18,108 @@
             font-family: 'Nunito', sans-serif; 
         }
         
-        /* Header Tinggi Statis */
+        /* Header Tinggi Statis (10% VH) */
         .header-tv { 
             background: linear-gradient(135deg, #1e293b, #0f172a); 
             color: #fff; 
-            padding: 10px 25px; 
+            padding: 8px 25px; 
             border-bottom: 4px solid #3b82f6; 
             flex-shrink: 0;
             height: 10vh;
         }
-        .logo-text { font-style: italic; font-weight: 900; font-size: 1.8rem; color: #ef4444; }
         .logo-box { background-color: #ffffff; border-radius: 8px; padding: 2px 12px; display: inline-flex; align-items: center; justify-content: center; height: 100%; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        
-        /* Konten Utama Mengambil Sisa Tinggi Layar */
+        .logo-text { font-style: italic; font-weight: 900; font-size: 1.8rem; color: #ef4444; }
+
+        /* Area Konten Utama Fleksibel Mengambil Sisa Tinggi Layar (84% VH) */
         .main-content-tv {
             height: 84vh;
-            padding: 15px;
+            padding: 10px 15px;
             overflow: hidden;
         }
         
-        /* Slider Gambar Menyesuaikan Tinggi 100% dari Kolom */
-        .carousel-container-tv { height: 100%; }
+                /* KOLOM KIRI: SLIDER GAMBAR MEDIA INFORMASI (AUTO STRETCHING 100%) */
+                /* ==================================================================== */
+        /* PERBAIKAN: MENERAPKAN RASIO ASPEK 16:9 (1920:1080) PADA BANNER SLIDER */
+        /* ==================================================================== */
+        .carousel-container-tv { 
+            height: 78vh; /* Mengunci tinggi maksimal wadah agar sejajar dengan batas bawah 5 baris loket kanan */
+            display: flex;
+            flex-direction: column;
+        }
+        
         .monitor-card { 
-            border-radius: 16px !important; 
+            border-radius: 12px !important; 
             border: none; 
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); 
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); 
             background-color: #1e293b;
             overflow: hidden;
+            width: 100%;
             height: 100%;
+            
+            /* KUNCI UTAMA RASIO: Menjaga rasio kotak tetap stabil di TV 1920x1080 */
+            aspect-ratio: 16 / 9; 
         }
-        .carousel-inner-tv { height: 100%; }
-        .carousel-item-tv { height: 100%; position: relative; }
-        .carousel-item-tv img { height: 100%; width: 100%; object-fit: cover; border-radius: 16px; }
-        .carousel-caption-tv { background: linear-gradient(to top, rgba(15,23,42,0.95), rgba(15,23,42,0)); left:0; right:0; bottom:0; padding: 25px 20px 15px 20px; text-align: left; }
         
-        /* Kunci Utama Grid Loket Tanpa Scroll */
+        .carousel-inner-tv { 
+            height: 100%; 
+            width: 100%;
+        }
+        
+        .carousel-item-tv { 
+            height: 100%; 
+            width: 100%; 
+            position: relative; 
+        }
+        
+        /* ENGINE STRETCHING GAMBAR MENGUTAMAKAN PROPORSIONALITAS */
+        .carousel-item-tv img { 
+            height: 100% !important; 
+            width: 100% !important; 
+            
+            /* object-fit: fill memaksa gambar meregang penuh menutup seluruh rasio 16:9 */
+            object-fit: fill !important; 
+            border-radius: 12px; 
+        }
+        
+        .carousel-caption-tv { 
+            background: linear-gradient(to top, rgba(15,23,42,0.95), rgba(15,23,42,0)); 
+            left: 0; 
+            right: 0; 
+            bottom: 0; 
+            padding: 20px 20px 10px 20px; 
+            text-align: left; 
+            z-index: 5;
+        }
+
+
+        /* KOLOM KANAN: GRID BOX LOKET VERTIKAL ANTI SCROLL (TINGGI 100%) */
         .grid-container-tv {
             height: 100%;
             display: flex;
-            align-content: flex-start;
+            align-content: space-between; /* Membagi baris loket merata ke bawah */
             overflow: hidden;
         }
         
-        /* Elemen Loket Fleksibel Fleksibel Berbasis Flexbox */
+        /* Elemen Kotak Loket Kapsul Premium Tipis Proporsional */
         .loket-card {
             background: #1e293b;
-            border-radius: 14px;
+            border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             border: 1px solid #334155;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            height: 100%; /* Tinggi diatur penuh mengisi grid box */
+            height: 100%;
         }
         .loket-title {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: #ffffff;
             font-weight: 800;
-            font-size: 1.25rem;
-            padding: 6px 12px;
+            font-size: 1.05rem;
+            padding: 3px 10px;
             letter-spacing: 0.5px;
+            text-transform: uppercase;
             flex-shrink: 0;
         }
         .loket-body-tv {
@@ -87,35 +128,39 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 8px;
+            padding: 4px;
         }
         .number-box { 
             font-weight: 900; 
             color: #10b981; 
             background-color: #0f172a; 
-            width: 90%;
+            width: 96%;
             border: 2px solid #10b981; 
-            border-radius: 10px; 
-            padding: 4px 0; 
-            text-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+            border-radius: 6px; 
+            padding: 1px 0; 
+            text-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
-            /* Font-size akan dikontrol dinamis oleh Javascript agar pas halaman */
         }
         .jurusan-text-tv {
             font-weight: 700;
             color: #eab308;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 6px;
-            line-height: 1.3;
+            letter-spacing: 0.3px;
+            margin-top: 3px;
+            line-height: 1.2;
             width: 100%;
-            padding: 0 5px;
-            /* Font-size diatur dinamis oleh Javascript */
+            padding: 0 4px;
+            white-space: normal; 
+            word-wrap: break-word; 
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Batasi maksimal 2 baris agar muat halaman */
+            -webkit-box-orient: vertical;
         }
         
-        /* Footer Tinggi Statis */
+        /* Footer Running Text (6% VH) */
         .footer-marquee { 
             height: 6vh;
             background: #ef4444; 
@@ -157,10 +202,10 @@
         </div>
     </div>
 
-    <!-- 2. KONTEN (84% VH) -->
+    <!-- 2. KONTEN (84% VH - INTEGRASI GAMBAR DAN GRID BERDAMPINGAN) -->
     <div class="main-content-tv">
         <div class="row w-100 h-100 m-0">
-            <!-- KOLOM KIRI: SLIDER MEDIA INFORMASI -->
+            <!-- KOLOM KIRI: SLIDER GAMBAR MEDIA INFORMASI (LEBAR 50% LAYAR) -->
             <div class="col-xl-6 col-lg-6 px-2 carousel-container-tv">
                 <div id="infoCarousel" class="carousel slide monitor-card" data-ride="carousel" data-interval="5000">
                     <div class="carousel-inner carousel-inner-tv">
@@ -175,7 +220,7 @@
                             <?php $i++; endforeach; ?>
                         <?php else: ?>
                             <div class="carousel-item active h-100">
-                                <div class="d-flex align-items-center justify-content-center bg-dark text-white font-weight-bold h-100" style="border-radius:16px;">
+                                <div class="d-flex align-items-center justify-content-center bg-dark text-white font-weight-bold h-100" style="border-radius:12px;">
                                     <h3>Media Informasi Sinar Jaya Group</h3>
                                 </div>
                             </div>
@@ -184,10 +229,10 @@
                 </div>
             </div>
 
-            <!-- KOLOM KANAN: GRID LOKET ADAPTIF ANTI SCROLL -->
+            <!-- KOLOM KANAN: TARGET INJEKSI GRID LOKET VERTIKAL ADAPTIF (LEBAR 50% LAYAR) -->
             <div class="col-xl-6 col-lg-6 px-2 h-100">
                 <div class="grid-container-tv w-100" id="display_loket_container">
-                    <!-- Diisi otomatis secara dinamis oleh AJAX -->
+                    <!-- Data dirender otomatis secara dinamis oleh AJAX -->
                 </div>
             </div>
         </div>
@@ -202,9 +247,6 @@
         </marquee>
     </div>
 
-    <?php 
-    // Memanggil partial view skrip pengolah data AJAX
-    $this->load->view('antrian/part_display_script'); 
-    ?>
+    <?php $this->load->view('antrian/part_display_script'); ?>
 </body>
 </html>

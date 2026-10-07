@@ -312,12 +312,47 @@ function playQueueSoundOffline(nomorAntrian, namaLoket) {
     const basePath = "<?php echo base_url('assets/admin/audio/'); ?>";
     let playlist = [];
 
-    // 1. Masukkan suara Bel Lonceng Bandara
+    // 1. Masukkan suara Bel Pembuka Lonceng Bandara
     playlist.push(basePath + "Airport_Bell.mp3");
     playlist.push(basePath + "nomor_antrian.mp3");
 
-    // 2. Masukkan rangkaian pecahan kata angka (Mendukung nomor 1 s.d 999)
-    let pecahanNomor = terbilangArray(nomorAntrian);
+    // ====================================================================
+    // LOGIKA SAKTI BARU: Deteksi Prefix Huruf & Pengejaan Angka Nol Depan
+    // ====================================================================
+    let nomorHanyaAngka = nomorAntrian;
+    
+    if (nomorAntrian.includes('-')) {
+        let potongan = nomorAntrian.split('-');
+        let hurufPrefix = potongan[0].toLowerCase(); // Mengambil huruf depan, misal: "a"
+        let bagianAngkaTeks = potongan[1];           // Mengambil string angka asli, misal: "024" atau "005"
+        
+        // Suntikkan suara ejaan huruf ke playlist, contoh: a.mp3
+        playlist.push(basePath + hurufPrefix + ".mp3");
+
+        // --- CEK DAN SUNTIKKAN SUARA NOL DEPAN SECARA BERURUTAN ---
+        // Jika formatnya 024 (panjang 3 karakter dan dimulai dengan 0)
+        if (bagianAngkaTeks.length === 3) {
+            if (bagianAngkaTeks.charAt(0) === '0' && bagianAngkaTeks.charAt(1) === '0') {
+                // Kasus "005" -> Suntik dua kali suara nol
+                playlist.push(basePath + "0.mp3");
+                playlist.push(basePath + "0.mp3");
+            } else if (bagianAngkaTeks.charAt(0) === '0') {
+                // Kasus "024" -> Suntik satu kali suara nol
+                playlist.push(basePath + "0.mp3");
+            }
+        }
+        
+        nomorHanyaAngka = bagianAngkaTeks; // Disimpan untuk diumpan ke fungsi terbilang
+    }
+
+    // 2. Masukkan rangkaian pecahan nomor urut angka asli (Diparsing aman)
+    let pecahanNomor = terbilangArray(parseInt(nomorHanyaAngka));
+    
+    // Jika angkanya murni 000 setelah di-parse (kemungkinan kecil), pastikan tidak bisu
+    if (parseInt(nomorHanyaAngka) === 0 && !nomorAntrian.includes('-')) {
+        playlist.push(basePath + "0.mp3");
+    }
+
     pecahanNomor.forEach(function(item) {
         playlist.push(basePath + item + ".mp3");
     });
@@ -326,36 +361,33 @@ function playQueueSoundOffline(nomorAntrian, namaLoket) {
     playlist.push(basePath + "silahkan_menuju_ke.mp3");
     playlist.push(basePath + "loket.mp3");
     
-    // Ambil angka loketnya saja (Misal: "Loket 3" diambil angka "3")
     let nomorLoketHanyaAngka = namaLoket.replace(/^\D+/g, ''); 
     playlist.push(basePath + nomorLoketHanyaAngka + ".mp3");
 
-    // 4. EKSEKUSI CHAIN-PLAYING (Memutar satu per satu setelah file sebelumnya selesai)
+    // 4. JALANKAN CHAIN-PLAYING PLAYLIST SECARA OFFLINE BERURUTAN
     let currentTrackIndex = 0;
-
     function playNextTrack() {
         if (currentTrackIndex < playlist.length) {
             let currentAudio = new Audio(playlist[currentTrackIndex]);
-            currentAudio.volume = 1.0; // Volume maksimal penuh nyaring
+            currentAudio.volume = 1.0;
             
             currentAudio.play().catch(function(err) {
-                console.log("File audio tidak ditemukan atau diblokir: " + playlist[currentTrackIndex]);
-                // Jika file mp3 ada yang kurang, otomatis lompat ke kata berikutnya agar tidak macet
+                console.log("File audio tidak ditemukan: " + playlist[currentTrackIndex]);
                 currentTrackIndex++;
                 playNextTrack();
             });
             
-            // Event Listener bawaan HTML5: Jika audio selesai berbunyi, langsung sambung track berikutnya
             currentAudio.onended = function() {
                 currentTrackIndex++;
                 playNextTrack();
             };
         }
     }
-
-    // Mulai jalankan track pertama
+    
     playNextTrack();
 }
+
+
 
 // C. PENANGKAP EVENT OPERASIONAL DESKTOP KASIR
 $(document).ready(function() {
