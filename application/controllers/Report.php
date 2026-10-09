@@ -5,7 +5,8 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-
+use PhpOffice\PhpSpreadsheet\Writer\Xls;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 class Report extends CI_Controller {
 
     public function __construct() {
@@ -47,7 +48,7 @@ class Report extends CI_Controller {
     // ====================================================================
     // MESIN SERVER-SIDE DATA TABLES (DENGAN PREFIX HURUF)
     // ====================================================================
-    public function get_data_server_side() {
+        public function get_data_server_side() {
         date_default_timezone_set('Asia/Jakarta');
         
         $tgl_mulai   = $this->input->post('tgl_mulai');
@@ -62,6 +63,9 @@ class Report extends CI_Controller {
         $start  = $this->input->post('start');
         $search = $this->input->post('search')['value'];
 
+        // ====================================================================
+        // PROSES 1: AMBIL DATA RIIL UNTUK HALAMAN SEKARANG
+        // ====================================================================
         $this->_build_query_report($db_mulai, $db_selesai, $id_loket, $kelas, $search);
         
         if ($limit != -1) {
@@ -70,11 +74,18 @@ class Report extends CI_Controller {
         
         $query_data = $this->db->get()->result_array();
 
+        // ====================================================================
+        // PROSES 2: HITUNG TOTAL DATA HASIL PENCARIAN (PANGGIL ULANG QUERY)
+        // ====================================================================
         $this->_build_query_report($db_mulai, $db_selesai, $id_loket, $kelas, $search);
-        $recordsFiltered = $this->db->get()->num_rows();
+        $recordsFiltered = $this->db->count_all_results();
 
-        $recordsTotal = $this->db->count_all_results('transaksi');
+        // Sesuai permintaan: Potong total global, samakan dengan hasil pencarian saja
+        $recordsTotal = $recordsFiltered;
 
+        // ====================================================================
+        
+        // Ambil peta loket huruf
         $this->db->select('id_loket');
         $this->db->from('loket');
         $this->db->order_by('CAST(loket AS UNSIGNED)', 'ASC');
@@ -128,6 +139,7 @@ class Report extends CI_Controller {
         echo json_encode($output);
     }
 
+
     private function _build_query_report($db_mulai, $db_selesai, $id_loket, $kelas, $search) {
         $this->db->select('transaksi.*, loket.loket as nomor_loket');
         $this->db->from('transaksi');
@@ -149,129 +161,96 @@ class Report extends CI_Controller {
         $this->db->order_by('transaksi.tgl_waktu', 'DESC');
     }
 
-    // ====================================================================
-    // PERBAIKAN 2: INTEGRASI PHPEXCEL UNTUK FORMAT BERKAS .XLSX PREMIUM
-    // ====================================================================
-        // ====================================================================
-    // SOLUSI TOTAL PHP 8: EKSPOR NATIVE SPREADSHEET (100% OFFLINE TANPA LIBRARY)
-    // ====================================================================
     public function export_excel() {
         date_default_timezone_set('Asia/Jakarta');
-        
+
+        // 1. Ambil saringan filter form aktif via GET
         $tgl_mulai   = $this->input->get('tgl_mulai');
         $tgl_selesai = $this->input->get('tgl_selesai');
         $id_loket    = $this->input->get('id_loket');
         $kelas       = $this->input->get('kelas');
+        $search      = $this->input->get('search');
 
         $db_mulai   = !empty($tgl_mulai) ? date('Ymd', strtotime($tgl_mulai)) : date('Ymd');
         $db_selesai = !empty($tgl_selesai) ? date('Ymd', strtotime($tgl_selesai)) : date('Ymd');
 
-        $this->db->select('transaksi.*, loket.loket as nomor_loket');
-        $this->db->from('transaksi');
-        $this->db->join('loket', 'loket.id_loket = transaksi.id_loket', 'left');
-        
-        if (!empty($db_mulai)) $this->db->where('transaksi.tgl >=', $db_mulai);
-        if (!empty($db_selesai)) $this->db->where('transaksi.tgl <=', $db_selesai);
-        if (!empty($id_loket)) $this->db->where('transaksi.id_loket', $id_loket);
-        if (!empty($kelas)) $this->db->where('transaksi.kelas', $kelas);
-        
-        $this->db->order_by('transaksi.tgl_waktu', 'ASC');
-        $data = $this->db->get()->result_array();
+        // 2. Tarik data riil hasil saringan pencarian pencarian
+        $this->_build_query_report($db_mulai, $db_selesai, $id_loket, $kelas, $search);
+        $query_data = $this->db->get()->result_array();
 
-        // Tarik susunan abjad dinamis loket berdasarkan urutan baris
+        // 3. Inisialisasi Objek Baru PhpSpreadsheet
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // 4. Set Header Kolom Excel
+        $sheet->setCellValue('A1', 'NO');
+        $sheet->setCellValue('B1', 'TANGGAL WAKTU');
+        $sheet->setCellValue('C1', 'NO ANTRIAN');
+        $sheet->setCellValue('D1', 'LOKET');
+        $sheet->setCellValue('E1', 'TUJUAN');
+        $sheet->setCellValue('F1', 'NAMA');
+        $sheet->setCellValue('G1', 'NO KTP');
+        $sheet->setCellValue('H1', 'KELAS');
+
+        // Beri style cetak tebal pada baris header pertama
+        $sheet->getStyle('A1:H1')->getFont()->setBold(true);
+
+        // 5. Susun Peta Master Huruf untuk Nomor Antrian Antrian
         $this->db->select('id_loket');
         $this->db->from('loket');
         $this->db->order_by('CAST(loket AS UNSIGNED)', 'ASC');
-        $peta_loket_excel = $this->db->get()->result_array();
+        $peta_loket_db = $this->db->get()->result_array();
         
         $peta_huruf = [];
-        foreach ($peta_loket_excel as $idx => $lkt) {
+        foreach ($peta_loket_db as $idx => $lkt) {
             $peta_huruf[$lkt['id_loket']] = chr(64 + ($idx + 1));
         }
 
-        // Protokol Header Browser untuk memaksa unduhan berkas spreadsheet (.xls / .xlsx)
-        header("Content-Type: application/vnd.ms-excel");
-        header("Content-Disposition: attachment; filename=Laporan_Antrian_SinarJaya_".date('Ymd_His').".xls");
-        header("Pragma: no-cache");
-        header("Expires: 0");
-        
-        // Mulai cetak struktur tabel HTML murni yang akan dibaca otomatis oleh Excel
-        echo '
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://w3.org">
-        <head>
-            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-            <!--[if gte mso 9]>
-            <xml>
-                <x:ExcelWorkbook>
-                    <x:ExcelWorksheets>
-                        <x:ExcelWorksheet>
-                            <x:Name>Data Antrian</x:Name>
-                            <x:WorksheetOptions>
-                                <x:DisplayGridlines/>
-                            </x:WorksheetOptions>
-                        </x:ExcelWorksheet>
-                    </x:ExcelWorksheets>
-                </x:ExcelWorkbook>
-            </xml>
-            <![endif]-->
-            <style>
-                /* Gaya CSS Khusus Excel untuk memaksa kolom bertipe teks (Mencegah Angka 0 Hilang) */
-                .text-format { mso-number-format:"\@"; }
-                .center-format { text-align: center; mso-number-format:"\@"; }
-            </style>
-        </head>
-        <body>
-            <table border="1">
-                <tr style="background-color:#4e73df; color:#ffffff; font-weight:bold; text-align:center;">
-                    <th>No</th>
-                    <th>Tanggal Waktu</th>
-                    <th>Nomor Antrian</th>
-                    <th>Loket</th>
-                    <th>Rute Wilayah Tujuan</th>
-                    <th>Nama Penumpang</th>
-                    <th>No KTP</th>
-                    <th>No Telp</th>
-                    <th>Kelas</th>
-                </tr>';
-        
+        // 6. Masukkan data ke cell baris demi baris baris
+        $row_num = 2;
         $no = 1;
-        foreach ($data as $d) {
+
+        foreach ($query_data as $row) {
             $prefix = 'A';
-            
-            // Cari tahu id_loket asal untuk rute tujuan baris ini
             $this->db->select('id_loket');
             $this->db->from('loket');
-            $this->db->where("REPLACE(jurusan, ' ', '') = REPLACE('".$d['tujuan']."', ' ', '')");
+            $this->db->where("REPLACE(jurusan, ' ', '') = REPLACE('".$row['tujuan']."', ' ', '')");
             $cari_id_asal = $this->db->get()->row_array();
             
             if (!empty($cari_id_asal) && isset($peta_huruf[$cari_id_asal['id_loket']])) {
                 $prefix = $peta_huruf[$cari_id_asal['id_loket']];
             }
-            
-            // Susun gabungan nomor antrean berhuruf lengkap kustom (Contoh: I-024)
-            $no_antrian_lengkap = $prefix . '-' . str_pad($d['no_antrian'], 3, '0', STR_PAD_LEFT);
-            $loket_text = !empty($d['nomor_loket']) ? 'Loket '.$d['nomor_loket'] : 'Waiting';
+            $no_antrian_lengkap = $prefix . '-' . str_pad($row['no_antrian'], 3, '0', STR_PAD_LEFT);
 
-            echo "<tr>";
-            echo "<td style='text-align:center;'>".$no++."</td>";
-            echo "<td>".$d['tgl_waktu']."</td>";
+            $sheet->setCellValue('A' . $row_num, $no++);
+            $sheet->setCellValue('B' . $row_num, $row['tgl_waktu']);
+            $sheet->setCellValue('C' . $row_num, $no_antrian_lengkap);
+            $sheet->setCellValue('D' . $row_num, !empty($row['nomor_loket']) ? 'Loket '.$row['nomor_loket'] : 'Waiting');
+            $sheet->setCellValue('E' . $row_num, $row['tujuan']);
+            $sheet->setCellValue('F' . $row_num, $row['nama']);
             
-            // KUNCI UTAMA: Menggunakan class center-format & text-format agar string dikunci aman tanpa hancur di Excel
-            echo "<td class='center-format' style='font-weight:bold;'>".$no_antrian_lengkap."</td>";
-            echo "<td>".$loket_text."</td>";
-            echo "<td>".$d['tujuan']."</td>";
-            echo "<td>".$d['nama']."</td>";
-            echo "<td class='text-format'>".$d['no_ktp']."</td>";
-            echo "<td class='text-format'>".$d['no_tlp']."</td>";
-            echo "<td>".$d['kelas']."</td>";
-            echo "</tr>";
+            // Set tipe data No KTP eksplisit STRING agar angka 0 di depan tidak terpotong di Excel
+            $sheet->setCellValueExplicit('G' . $row_num, $row['no_ktp'], DataType::TYPE_STRING);
+            
+            $sheet->setCellValue('H' . $row_num, $row['kelas']);
+            $row_num++;
         }
+
+        // Auto-size lebar kolom biar rapi tidak terpotong text text-nya
+        foreach (range('A', 'H') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+
+        // 7. Stream File Unduhan Langsung ke Browser Browser
+        $filename = "Laporan_Transaksi_" . date('Ymd_His') . ".xls";
         
-        echo '
-            </table>
-        </body>
-        </html>';
-        exit();
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xls($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 
 }
